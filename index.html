@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>100 DAYS: APOCALYPSE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#12130f; --panel:#1b1c16; --panel2:#22241c; --line:#33362b;
+  --bone:#e7e1cf; --dim:#9a9484;
+  --rust:#c1462a; --rust2:#8f3320;
+  --moss:#6f8f4e; --moss2:#4d6537;
+  --amber:#d1a23f;
+  --blood:#7a1f1f;
+  --radius:2px;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ --bg:#12130f; } }
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{margin:0;background:var(--bg);color:var(--bone);font-family:'Oswald',system-ui,sans-serif;font-weight:400;
+  background-image:radial-gradient(circle at 20% 10%, #1c1d16 0%, var(--bg) 55%);}
+h1,h2,h3,.display{font-family:'Bebas Neue',system-ui,sans-serif;letter-spacing:.03em;}
+::selection{background:var(--rust);color:#fff;}
+button{font-family:inherit;cursor:pointer;}
+.app{max-width:960px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;}
+
+/* HUD */
+.hud{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#151610 0%, rgba(21,22,16,.97) 100%);
+  border-bottom:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-top,0px));
+  padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;}
+.day-badge{font-family:'Bebas Neue';font-size:28px;color:var(--amber);white-space:nowrap;line-height:1;}
+.day-badge small{display:block;font-family:'Oswald';font-size:10px;letter-spacing:.1em;color:var(--dim);font-weight:500;}
+.res-row{display:flex;gap:14px;flex-wrap:wrap;flex:1;}
+.res{display:flex;align-items:center;gap:5px;font-size:14px;min-width:52px;}
+.res .n{font-weight:600;}
+.res.low .n{color:var(--rust);}
+.basehp{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim);}
+.bar{width:70px;height:7px;background:#0d0e0a;border:1px solid var(--line);position:relative;overflow:hidden;}
+.bar i{display:block;height:100%;background:var(--moss);}
+
+/* Main */
+.main{flex:1;padding:18px 14px 90px;}
+.phase-title{margin:4px 0 4px;font-size:34px;color:var(--bone);}
+.phase-sub{color:var(--dim);font-size:14px;margin-bottom:16px;max-width:60ch;line-height:1.5;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+.card{background:var(--panel);border:1px solid var(--line);padding:14px;border-radius:var(--radius);
+  display:flex;flex-direction:column;gap:6px;text-align:left;transition:border-color .15s, transform .1s;}
+.card:hover{border-color:var(--amber);}
+.card:active{transform:scale(.98);}
+.card .ic{font-size:22px;}
+.card .t{font-family:'Bebas Neue';font-size:19px;letter-spacing:.02em;}
+.card .d{font-size:12px;color:var(--dim);line-height:1.4;}
+.card:disabled,.card[disabled]{opacity:.4;cursor:not-allowed;}
+button.card{width:100%;}
+
+.section{margin-bottom:26px;}
+.section h2{font-size:22px;margin:0 0 10px;color:var(--amber);}
+
+.survivor-list{display:flex;flex-direction:column;gap:8px;}
+.surv{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);padding:8px 12px;border-radius:var(--radius);}
+.surv .av{width:34px;height:34px;border-radius:50%;background:var(--moss2);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:16px;flex-shrink:0;}
+.surv.hurt .av{background:var(--rust2);}
+.surv .info{flex:1;min-width:0;}
+.surv .nm{font-weight:600;font-size:14px;}
+.surv .tr{font-size:11px;color:var(--dim);}
+.hpbar{width:60px;height:5px;background:#0d0e0a;border:1px solid var(--line);}
+.hpbar i{display:block;height:100%;background:var(--moss);}
+
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--bone);padding:10px 18px;border-radius:var(--radius);font-size:14px;letter-spacing:.02em;}
+.btn:hover{border-color:var(--amber);}
+.btn.primary{background:var(--moss2);border-color:var(--moss);}
+.btn.primary:hover{background:var(--moss);}
+.btn.danger{background:var(--blood);border-color:var(--rust);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+
+.log{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;max-height:160px;overflow-y:auto;font-size:13px;line-height:1.6;color:var(--dim);}
+.log p{margin:0 0 4px;}
+.log p.warn{color:var(--rust);}
+.log p.good{color:var(--moss);}
+
+.overlay{position:fixed;inset:0;background:rgba(8,8,6,.86);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+.modal{background:var(--panel);border:1px solid var(--amber);max-width:460px;width:100%;padding:22px;border-radius:var(--radius);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.modal h3{font-size:26px;margin:0 0 6px;color:var(--amber);}
+.modal p{font-size:14px;line-height:1.55;color:var(--bone);margin:0 0 16px;}
+.modal .btnrow{flex-direction:column;}
+.modal .btn{width:100%;text-align:left;}
+
+.title-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;gap:6px;}
+.title-screen h1{font-size:64px;line-height:.95;color:var(--rust);text-shadow:0 0 30px rgba(193,70,42,.35);margin:0;}
+.title-screen .sub2{font-family:'Bebas Neue';font-size:22px;color:var(--amber);letter-spacing:.15em;margin-bottom:18px;}
+.title-screen p.lede{max-width:46ch;color:var(--dim);font-size:14px;line-height:1.6;margin:0 0 26px;}
+
+.foot-nav{position:sticky;bottom:0;background:rgba(21,22,16,.97);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));
+  display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.foot-nav .ph{font-size:11px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;}
+
+.select-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.chip{padding:6px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;background:var(--panel2);color:var(--dim);}
+.chip.active{border-color:var(--amber);color:var(--amber);}
+
+@media(max-width:520px){ .title-screen h1{font-size:46px;} .phase-title{font-size:26px;} }
+</style>
+</head>
+<body>
+<div id="root" class="app"></div>
+
+<script>
+/* ---------- DATA ---------- */
+const TRAITS = {
+  Farmer:  {icon:"🌾", good:"+50% food gathered", bad:"Poor in combat", buff:{gather_food:1.5, fight:-0.3}},
+  Engineer:{icon:"🔧", good:"Builds cost 25% less", bad:"Slow gatherer", buff:{build_cost:0.75, gather:0.8}},
+  Doctor:  {icon:"⚕️", good:"Heals 50% more, saves medicine", bad:"Frail", buff:{heal:1.5, hp:0.85}},
+  Hunter:  {icon:"🏹", good:"+50% hunting yield", bad:"Uses more food", buff:{hunt:1.5, upkeep:1.2}},
+  Soldier: {icon:"🪖", good:"+defense, fights well", bad:"Eats double rations", buff:{defense:2, upkeep:1.5}},
+  Mechanic:{icon:"⚙️", good:"+50% fuel & generator output", bad:"Weak explorer", buff:{fuel:1.5, explore:0.8}},
+};
+const NAMES = ["Mara","Jonas","Priya","Delil","Sasha","Emeka","Rosa","Kip","Noor","Hollis","Ines","Tobin","Ashe","Fenn","Odalys","Cato"];
+const LOCATIONS = [
+  {id:"market", name:"Abandoned Supermarket", icon:"🏬", risk:0.15, desc:"Aisles picked over but not empty.", loot:{food:[6,14],water:[4,10]}},
+  {id:"hospital", name:"Hospital", icon:"🏥", risk:0.35, desc:"Dark wards. Medicine, if you're fast.", loot:{medicine:[3,8],food:[0,3]}},
+  {id:"police", name:"Police Station", icon:"🚓", risk:0.3, desc:"Armory might still be locked — or not.", loot:{metal:[4,10],fuel:[0,3]}},
+  {id:"gas", name:"Gas Station", icon:"⛽", risk:0.4, desc:"Fuel tanks are tempting. So is the smell of gas.", loot:{fuel:[6,14],metal:[0,3]}},
+  {id:"forest", name:"Forest", icon:"🌲", risk:0.1, desc:"Quiet, but wolves den somewhere nearby.", loot:{wood:[8,18],food:[0,4]}},
+  {id:"military", name:"Military Base", icon:"🎖️", risk:0.55, desc:"High walls. Higher stakes.", loot:{metal:[8,16],fuel:[4,10],medicine:[0,4]}},
+  {id:"bunker", name:"Underground Bunker", icon:"🚪", risk:0.7, desc:"Rumors say it's stocked for the end of the world.", loot:{food:[8,16],water:[8,16],medicine:[4,10],metal:[4,10]}},
+];
+const BUILDINGS = {
+  shelter:{name:"Shelter",icon:"🏚️",desc:"More beds, less fatigue.",cost:{wood:10,metal:2}},
+  farm:{name:"Farm",icon:"🌱",desc:"Passive food every day.",cost:{wood:15,metal:4}},
+  storage:{name:"Storage",icon:"📦",desc:"Cuts losses from theft & spoilage.",cost:{wood:10,metal:5}},
+  workshop:{name:"Workshop",icon:"🛠️",desc:"Cheaper, faster builds.",cost:{wood:12,metal:8}},
+  watchtower:{name:"Watchtower",icon:"🗼",desc:"Warns of night attacks.",cost:{wood:14,metal:6}},
+  medical:{name:"Medical Room",icon:"➕",desc:"Better healing, less medicine used.",cost:{wood:10,metal:6}},
+  generator:{name:"Generator",icon:"🔋",desc:"Powers other buildings.",cost:{metal:14,fuel:6}},
+  wall:{name:"Defensive Wall",icon:"🧱",desc:"Major defense vs attacks.",cost:{wood:20,metal:14}},
+};
+
+/* ---------- STATE ---------- */
+let S = null;
+function freshState(){
+  const survivors = [];
+  const traitKeys = Object.keys(TRAITS);
+  for(let i=0;i<3;i++){
+    const t = traitKeys[Math.floor(Math.random()*traitKeys.length)];
+    survivors.push(mkSurvivor(t));
+  }
+  return {
+    day:1, phase:"morning",
+    res:{food:22,water:22,wood:16,metal:6,medicine:6,fuel:5},
+    survivors, baseHealth:100,
+    buildings:Object.fromEntries(Object.keys(BUILDINGS).map(k=>[k, k==="shelter"?1:0])),
+    log:[{t:"You wake in the ruins of a town. The world hasn't ended yet — but the countdown has begun. 100 days.",c:""}],
+    todaysLocations:null, morningDone:false, ending:null,
+  };
+}
+function mkSurvivor(trait){
+  return {id:Math.random().toString(36).slice(2), name:NAMES[Math.floor(Math.random()*NAMES.length)], trait,
+    hp:100, status:"ok"};
+}
+function buff(s,key,def=1){ const b=TRAITS[s.trait].buff[key]; return b===undefined?def:b; }
+function save(){ try{ localStorage.setItem("apocalypse100_save", JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const raw=localStorage.getItem("apocalypse100_save"); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+function clearSave(){ try{ localStorage.removeItem("apocalypse100_save"); }catch(e){} }
+function log(text, cls){ S.log.unshift({t:text,c:cls||""}); if(S.log.length>40) S.log.pop(); }
+function clamp(n,a,b){ return Math.max(a,Math.min(b,n)); }
+function rnd(a,b){ return Math.floor(a+Math.random()*(b-a+1)); }
+function aliveSurvivors(){ return S.survivors.filter(s=>s.status!=="dead"); }
+function defenseScore(){
+  let d = S.buildings.wall*4 + S.buildings.watchtower*2;
+  aliveSurvivors().forEach(s=> d += buff(s,"defense",0));
+  return d;
+}
+
+/* ---------- RENDER ---------- */
+const root = document.getElementById("root");
+function render(){
+  if(!S){ root.innerHTML = titleScreen(); bindTitle(); return; }
+  if(S.ending){ root.innerHTML = endingScreen(); bindEnding(); return; }
+  root.innerHTML = hud() + mainPanel() + footNav();
+  bindMain();
+  save();
+}
+
+function titleScreen(){
+  const hasSave = !!load();
+  return `<div class="title-screen">
+    <h1>100 DAYS</h1>
+    <div class="sub2">APOCALYPSE</div>
+    <p class="lede">Something is coming. You don't know what, or when — only that you have 100 days to prepare. Gather. Build. Trust carefully. Survive.</p>
+    <div class="btnrow">
+      <button class="btn primary" id="new-game">Begin (New Game)</button>
+      ${hasSave?'<button class="btn" id="continue-game">Continue Run</button>':''}
+    </div>
+  </div>`;
+}
+function bindTitle(){
+  document.getElementById("new-game").onclick=()=>{ clearSave(); S=freshState(); render(); };
+  const c=document.getElementById("continue-game");
+  if(c) c.onclick=()=>{ S=load(); render(); };
+}
+
+function hud(){
+  const r=S.res;
+  const low=(v)=> v<=4 ? "low":"";
+  return `<div class="hud">
+    <div class="day-badge">DAY ${S.day}<small>of 100 · ${S.phase.toUpperCase()}</small></div>
+    <div class="res-row">
+      <div class="res ${low(r.food)}">🍖<span class="n">${r.food}</span></div>
+      <div class="res ${low(r.water)}">💧<span class="n">${r.water}</span></div>
+      <div class="res">🪵<span class="n">${r.wood}</span></div>
+      <div class="res">🔩<span class="n">${r.metal}</span></div>
+      <div class="res">💊<span class="n">${r.medicine}</span></div>
+      <div class="res">⛽<span class="n">${r.fuel}</span></div>
+    </div>
+    <div class="basehp">BASE <div class="bar"><i style="width:${S.baseHealth}%;background:${S.baseHealth<30?'var(--rust)':'var(--moss)'}"></i></div>
+    <span>${aliveSurvivors().length} 🧍</span></div>
+  </div>`;
+}
+
+function footNav(){
+  let label = {morning:"Choose your morning activity", afternoon:"Manage your base", night:"Night falls..."}[S.phase]||"";
+  return `<div class="foot-nav"><span class="ph">${label}</span></div>`;
+}
+
+function mainPanel(){
+  if(S.phase==="morning") return morningPanel();
+  if(S.phase==="afternoon") return afternoonPanel();
+  if(S.phase==="night") return nightPanel();
+  return "";
+}
+
+/* MORNING */
+const ACTIVITIES = [
+  {id:"gather", icon:"🧺", t:"Gather", d:"Search nearby for food & water. Low risk."},
+  {id:"hunt", icon:"🏹", t:"Hunt", d:"Track game for food. Risk of injury."},
+  {id:"build", icon:"🔨", t:"Build", d:"Construct or upgrade a building."},
+  {id:"explore", icon:"🧭", t:"Explore", d:"Send someone to a risky location."},
+  {id:"rest", icon:"🛌", t:"Rest", d:"Heal up. No resources gained."},
+  {id:"scout", icon:"🔭", t:"Scout", d:"Watch for danger. Improves tonight's odds."},
+];
+function morningPanel(){
+  return `<div class="main">
+    <h1 class="phase-title">Morning — Day ${S.day}</h1>
+    <p class="phase-sub">What does the camp spend today on? Choose wisely — you only get one focus per day.</p>
+    <div class="section"><div class="grid">
+      ${ACTIVITIES.map(a=>`<button class="card" data-act="${a.id}"><span class="ic">${a.icon}</span><span class="t">${a.t}</span><span class="d">${a.d}</span></button>`).join("")}
+    </div></div>
+    ${survivorSection()}
+    <div class="section"><h2>Camp Log</h2>${logBlock()}</div>
+  </div>`;
+}
+function survivorSection(){
+  return `<div class="section"><h2>Survivors</h2><div class="survivor-list">
+    ${S.survivors.map(s=>{
+      if(s.status==="dead") return `<div class="surv hurt"><div class="av">💀</div><div class="info"><div class="nm">${s.name}</div><div class="tr">Deceased — ${TRAITS[s.trait].icon} ${s.trait}</div></div></div>`;
+      return `<div class="surv ${s.hp<50?'hurt':''}"><div class="av">${TRAITS[s.trait].icon}</div>
+      <div class="info"><div class="nm">${s.name}</div><div class="tr">${s.trait} · ${TRAITS[s.trait].good}</div></div>
+      <div class="hpbar"><i style="width:${s.hp}%;background:${s.hp<40?'var(--rust)':'var(--moss)'}"></i></div></div>`;
+    }).join("")}
+  </div></div>`;
+}
+function logBlock(){
+  return `<div class="log">${S.log.slice(0,10).map(l=>`<p class="${l.c}">${l.t}</p>`).join("")}</div>`;
+}
+
+function doActivity(id){
+  const alive = aliveSurvivors();
+  if(id==="gather"){
+    let f=0,w=0;
+    alive.forEach(s=>{ f+=rnd(2,5)*buff(s,"gather_food")*buff(s,"gather"); w+=rnd(2,5)*buff(s,"gather"); });
+    f=Math.round(f); w=Math.round(w);
+    S.res.food+=f; S.res.water+=w;
+    log(`Your survivors gathered <b>+${f} food</b> and <b>+${w} water</b>.`,"good");
+    goAfternoon();
+  } else if(id==="hunt"){
+    let f=0; let injured=false;
+    alive.forEach(s=>{ f+=rnd(3,7)*buff(s,"hunt"); if(Math.random()<0.12){ s.hp=clamp(s.hp-rnd(10,25),0,100); injured=true; if(s.hp===0)s.status="dead"; } });
+    f=Math.round(f);
+    S.res.food+=f;
+    log(`The hunt brought in <b>+${f} food</b>.${injured?" Someone came back hurt.":""}`, injured?"warn":"good");
+    goAfternoon();
+  } else if(id==="build"){
+    openBuildModal();
+    return;
+  } else if(id==="explore"){
+    openExploreModal();
+    return;
+  } else if(id==="rest"){
+    alive.forEach(s=> s.hp=clamp(s.hp+rnd(10,20),0,100));
+    log("The camp rests. Everyone recovers strength.","good");
+    goAfternoon();
+  } else if(id==="scout"){
+    S.scouted = true;
+    log("A scout climbs the ridge to watch the horizon. Tonight holds fewer surprises.","");
+    goAfternoon();
+  }
+  render();
+}
+function goAfternoon(){ S.phase="afternoon"; }
+
+/* Build modal */
+function openBuildModal(){
+  const opts = Object.entries(BUILDINGS).map(([k,b])=>{
+    const lvl = S.buildings[k];
+    const mult = 1+lvl*0.6;
+    const costWood = Math.round((b.cost.wood||0)*mult*(0.75**S.buildings.workshop));
+    const costMetal = Math.round((b.cost.metal||0)*mult*(0.75**S.buildings.workshop));
+    const costFuel = Math.round((b.cost.fuel||0)*mult);
+    const affordable = S.res.wood>=costWood && S.res.metal>=costMetal && S.res.fuel>=costFuel;
+    return `<button class="btn" data-build="${k}" ${affordable?'':'disabled'}>${b.icon} ${b.name} (Lv.${lvl}) — 🪵${costWood} 🔩${costMetal}${costFuel?` ⛽${costFuel}`:''}</button>`;
+  }).join("");
+  showModal(`Build`, `Choose what to construct or upgrade today. Higher levels cost more.`, opts, true);
+  document.querySelectorAll("[data-build]").forEach(btn=>{
+    btn.onclick=()=>{
+      const k = btn.dataset.build;
+      const b=BUILDINGS[k]; const lvl=S.buildings[k]; const mult=1+lvl*0.6;
+      const costWood = Math.round((b.cost.wood||0)*mult*(0.75**S.buildings.workshop));
+      const costMetal = Math.round((b.cost.metal||0)*mult*(0.75**S.buildings.workshop));
+      const costFuel = Math.round((b.cost.fuel||0)*mult);
+      S.res.wood-=costWood; S.res.metal-=costMetal; S.res.fuel-=costFuel;
+      S.buildings[k]++;
+      log(`Built/upgraded ${b.icon} <b>${b.name}</b> to level ${S.buildings[k]}.`,"good");
+      closeModal(); goAfternoon(); render();
+    };
+  });
+}
+
+/* Explore modal */
+function openExploreModal(){
+  if(!S.todaysLocations || S.exploreDay!==S.day){
+    const shuffled=[...LOCATIONS].sort(()=>Math.random()-0.5);
+    S.todaysLocations = shuffled.slice(0,3);
+    S.exploreDay = S.day;
+  }
+  const opts = S.todaysLocations.map(loc=>`<button class="btn" data-loc="${loc.id}">${loc.icon} ${loc.name} — risk ${Math.round(loc.risk*100)}%</button>`).join("");
+  showModal("Explore", "Pick a site to search. Higher risk locations hold better loot — and worse dangers.", opts, true);
+  document.querySelectorAll("[data-loc]").forEach(btn=>{
+    btn.onclick=()=>{
+      const loc = S.todaysLocations.find(l=>l.id===btn.dataset.loc);
+      resolveExplore(loc);
+      closeModal(); goAfternoon(); render();
+    };
+  });
+}
+function resolveExplore(loc){
+  const alive = aliveSurvivors();
+  const scout = alive[Math.floor(Math.random()*alive.length)] || null;
+  const explBuff = scout? buff(scout,"explore") : 1;
+  const risk = loc.risk / explBuff;
+  if(Math.random() < risk){
+    const roll = Math.random();
+    if(roll<0.4 && scout){
+      scout.hp = clamp(scout.hp-rnd(15,35),0,100);
+      if(scout.hp===0){ scout.status="dead"; log(`${loc.icon} At the ${loc.name}, ${scout.name} didn't make it back.`,"warn"); }
+      else log(`${loc.icon} ${scout.name} was hurt at the ${loc.name} but returned.`,"warn");
+    } else if(roll<0.7){
+      const lost = Math.min(S.res.food, rnd(3,8));
+      S.res.food-=lost;
+      log(`${loc.icon} The ${loc.name} was a trap — lost ${lost} food escaping.`,"warn");
+    } else {
+      log(`${loc.icon} The ${loc.name} was empty. A wasted, tense day.`,"warn");
+    }
+  } else {
+    const gains=[];
+    Object.entries(loc.loot).forEach(([res,[lo,hi]])=>{
+      const amt = rnd(lo,hi);
+      if(amt>0){ S.res[res]+=amt; gains.push(`+${amt} ${res}`); }
+    });
+    log(`${loc.icon} Success at the ${loc.name}: ${gains.join(", ")}.`,"good");
+  }
+}
+
+function showModal(title, desc, buttonsHtml, cancellable){
+  const div = document.createElement("div");
+  div.className="overlay"; div.id="modal-overlay";
+  div.innerHTML = `<div class="modal"><h3>${title}</h3><p>${desc}</p><div class="btnrow">${buttonsHtml}
+    ${cancellable?'<button class="btn" id="modal-cancel">Reconsider</button>':''}</div></div>`;
+  document.body.appendChild(div);
+  const cancel=document.getElementById("modal-cancel");
+  if(cancel) cancel.onclick=closeModal;
+}
+function closeModal(){ const m=document.getElementById("modal-overlay"); if(m) m.remove(); }
+
+/* AFTERNOON */
+function afternoonPanel(){
+  return `<div class="main">
+    <h1 class="phase-title">Afternoon — Base Management</h1>
+    <p class="phase-sub">Check on your resources, survivors, and buildings before night falls.</p>
+    <div class="section"><h2>Resources</h2><div class="grid">
+      ${resCard("🍖","Food",S.res.food)}${resCard("💧","Water",S.res.water)}${resCard("🪵","Wood",S.res.wood)}
+      ${resCard("🔩","Metal",S.res.metal)}${resCard("💊","Medicine",S.res.medicine)}${resCard("⛽","Fuel",S.res.fuel)}
+    </div></div>
+    <div class="section"><h2>Buildings</h2><div class="grid">
+      ${Object.entries(S.buildings).map(([k,lvl])=>`<div class="card"><span class="ic">${BUILDINGS[k].icon}</span><span class="t">${BUILDINGS[k].name}</span><span class="d">Level ${lvl} — ${BUILDINGS[k].desc}</span></div>`).join("")}
+    </div></div>
+    ${survivorSection()}
+    ${aliveSurvivors().some(s=>s.hp<70) ? `<div class="section"><button class="btn primary" id="use-medicine" ${S.res.medicine<1?'disabled':''}>💊 Treat wounded (uses 1 medicine)</button></div>` : ""}
+    <div class="btnrow"><button class="btn primary" id="go-night">Continue to Night →</button></div>
+  </div>`;
+}
+function resCard(icon,name,val){ return `<div class="card"><span class="ic">${icon}</span><span class="t">${val}</span><span class="d">${name}</span></div>`; }
+
+/* NIGHT */
+const NIGHT_EVENTS = ["attack","arrival","theft","storm","fire","strange","calm"];
+function nightPanel(){
+  if(!S.nightResolved){
+    return `<div class="main"><h1 class="phase-title">Night — Day ${S.day}</h1>
+    <p class="phase-sub">The sun sets. Something always happens in the dark.</p>
+    <div class="btnrow"><button class="btn primary" id="resolve-night">Face the Night</button></div></div>`;
+  }
+  return `<div class="main"><h1 class="phase-title">Dawn Approaches</h1>
+    <div class="section"><h2>What Happened</h2>${logBlock()}</div>
+    <div class="btnrow"><button class="btn primary" id="next-day">${S.day>=100?'See What Comes':'Next Day →'}</button></div></div>`;
+}
+function upkeep(){
+  const alive = aliveSurvivors();
+  let foodNeed=0, waterNeed=0;
+  alive.forEach(s=>{ foodNeed+=2*buff(s,"upkeep"); waterNeed+=2*buff(s,"upkeep"); });
+  foodNeed=Math.round(foodNeed); waterNeed=Math.round(waterNeed);
+  S.res.food-=foodNeed; S.res.water-=waterNeed;
+  if(S.buildings.farm) S.res.food += S.buildings.farm*3;
+  if(S.buildings.generator) S.res.fuel += S.buildings.generator*1;
+  if(S.res.food<0){ const deficit=-S.res.food; S.res.food=0; alive.forEach(s=>s.hp=clamp(s.hp-Math.round(deficit/alive.length),0,100)); log(`Food ran out. The camp goes hungry.`,"warn"); }
+  if(S.res.water<0){ const deficit=-S.res.water; S.res.water=0; alive.forEach(s=>s.hp=clamp(s.hp-Math.round(deficit/alive.length)*2,0,100)); log(`Water ran out. Everyone is weaker for it.`,"warn"); }
+  alive.forEach(s=>{ if(s.hp<=0) s.status="dead"; });
+}
+function resolveNight(){
+  upkeep();
+  const def = defenseScore();
+  let weights = {attack:14+Math.floor(S.day/8), arrival:10, theft:10, storm:8, fire:6, strange:8, calm:14};
+  if(S.scouted){ weights.attack=Math.max(2,weights.attack-8); weights.calm+=10; }
+  if(S.buildings.watchtower) weights.attack=Math.max(2,weights.attack-S.buildings.watchtower*3);
+  const total = Object.values(weights).reduce((a,b)=>a+b,0);
+  let r = Math.random()*total; let pick="calm";
+  for(const [k,w] of Object.entries(weights)){ if(r<w){pick=k;break;} r-=w; }
+
+  if(pick==="attack"){
+    const dmg = Math.max(2, rnd(10,26) - def);
+    if(dmg<=0){ log(`⚔️ Raiders probe the perimeter but your defenses hold them off completely.`,"good"); }
+    else {
+      S.baseHealth = clamp(S.baseHealth-dmg,0,100);
+      log(`⚔️ Raiders attack in the dark! Base took ${dmg} damage.`,"warn");
+      const alive=aliveSurvivors();
+      if(Math.random()<0.35 && alive.length){ const v=alive[Math.floor(Math.random()*alive.length)]; v.hp=clamp(v.hp-rnd(10,30),0,100); if(v.hp===0)v.status="dead"; log(`${v.name} was ${v.status==='dead'?'killed':'wounded'} defending the base.`,"warn"); }
+    }
+  } else if(pick==="arrival"){
+    pendingArrival();
+    return; // waits for choice
+  } else if(pick==="theft"){
+    const protect = S.buildings.storage*0.15;
+    const keys=["food","water","wood","metal","medicine","fuel"].filter(k=>S.res[k]>0);
+    if(keys.length && Math.random()>protect){
+      const k=keys[Math.floor(Math.random()*keys.length)];
+      const lost=Math.min(S.res[k], rnd(2,7));
+      S.res[k]-=lost;
+      log(`🕵️ Someone raided your stores in the night — lost ${lost} ${k}.`,"warn");
+    } else log(`🕵️ You hear footsteps near the storage, but your defenses scare them off.`,"good");
+  } else if(pick==="storm"){
+    const dmg = Math.max(1, rnd(3,10)-S.buildings.shelter*2);
+    S.baseHealth = clamp(S.baseHealth-dmg,0,100);
+    log(`🌩️ A violent storm batters the camp. Base took ${dmg} damage.`, dmg>3?"warn":"");
+  } else if(pick==="fire"){
+    if(S.buildings.wall>=2 || Math.random()<0.3){ log(`🔥 A fire starts but is contained before it spreads.`,""); }
+    else{
+      const lost = Math.min(S.res.wood, rnd(4,10));
+      S.res.wood-=lost;
+      S.baseHealth = clamp(S.baseHealth-rnd(3,8),0,100);
+      log(`🔥 Fire tears through part of the camp. Lost ${lost} wood and took damage.`,"warn");
+    }
+  } else if(pick==="strange"){
+    const flavors = ["Strange lights flicker on the horizon. No one sleeps well.","A radio crackles with a voice speaking a language nobody recognizes, then silence.","The dogs won't stop howling toward the treeline. Nothing is found.","A survivor swears they saw someone in the trees who wasn't quite... right."];
+    log(`❓ ${flavors[Math.floor(Math.random()*flavors.length)]}`,"");
+  } else {
+    log(`🌙 A quiet night, for once. The camp sleeps.`,"good");
+  }
+  S.scouted=false;
+  S.nightResolved=true;
+  render();
+}
+function pendingArrival(){
+  const stranger = NAMES[Math.floor(Math.random()*NAMES.length)];
+  const claim = ["they're carrying medicine to trade","they're alone and out of supplies","they say raiders are chasing them","they claim to be a mechanic looking for shelter"][Math.floor(Math.random()*4)];
+  showModal(`A Stranger Arrives`, `${stranger} approaches the gate at dusk, hands raised. They say ${claim}.`, `
+    <button class="btn primary" data-arr="let">Let them inside</button>
+    <button class="btn" data-arr="trade">Trade through the gate</button>
+    <button class="btn" data-arr="question">Question them first</button>
+    <button class="btn danger" data-arr="refuse">Refuse them</button>
+  `, false);
+  document.querySelectorAll("[data-arr]").forEach(btn=>{
+    btn.onclick=()=>{
+      const choice=btn.dataset.arr;
+      if(choice==="let"){
+        if(Math.random()<0.65){
+          const trait = Object.keys(TRAITS)[Math.floor(Math.random()*6)];
+          const ns=mkSurvivor(trait); ns.name=stranger;
+          S.survivors.push(ns);
+          log(`🚪 You let ${stranger} in. They turn out to be a ${trait.toLowerCase()} and join the camp.`,"good");
+        } else {
+          const lost = Math.min(S.res.medicine, rnd(2,6));
+          S.res.medicine-=lost; S.baseHealth=clamp(S.baseHealth-rnd(5,15),0,100);
+          log(`🚪 You let ${stranger} in — it was a trick. They robbed you and fled, doing damage on the way out.`,"warn");
+        }
+      } else if(choice==="trade"){
+        if(Math.random()<0.6){
+          const give = Math.min(S.res.food, rnd(3,6));
+          S.res.food-=give; S.res.medicine+=rnd(2,5);
+          log(`🤝 You trade ${give} food through the gate for medicine. ${stranger} moves on.`,"good");
+        } else {
+          log(`🤝 The trade goes bad — ${stranger} takes your goods and vanishes into the dark before handing anything over.`,"warn");
+          const lost=Math.min(S.res.food, rnd(2,5)); S.res.food-=lost;
+        }
+      } else if(choice==="question"){
+        if(Math.random()<0.5){
+          log(`❔ Careful questioning reveals ${stranger} is telling the truth. You share a little food and send them on with goodwill.`,"good");
+          S.res.food = Math.max(0, S.res.food - 2);
+        } else {
+          log(`❔ ${stranger} grows nervous under questioning and slips away into the night. You'll never know what they really wanted.`,"");
+        }
+      } else {
+        log(`🚫 You turn ${stranger} away. They curse your camp as they disappear — you'll never know what you lost, or avoided.`,"");
+      }
+      closeModal();
+      S.scouted=false; S.nightResolved=true; render();
+    };
+  });
+}
+
+/* ---------- FLOW ---------- */
+function bindMain(){
+  document.querySelectorAll("[data-act]").forEach(el=> el.onclick=()=>doActivity(el.dataset.act));
+  const um=document.getElementById("use-medicine");
+  if(um) um.onclick=()=>{
+    const target = aliveSurvivors().sort((a,b)=>a.hp-b.hp)[0];
+    if(target && S.res.medicine>0){
+      const healer = aliveSurvivors().find(s=>s.trait==="Doctor");
+      const amt = Math.round(rnd(20,35) * (healer?buff(healer,"heal"):1));
+      target.hp=clamp(target.hp+amt,0,100);
+      S.res.medicine -= healer? Math.max(1,Math.round(1*(healer?0.75:1))) : 1;
+      log(`💊 Treated ${target.name}, recovering ${amt} HP.`,"good");
+      render();
+    }
+  };
+  const gn=document.getElementById("go-night");
+  if(gn) gn.onclick=()=>{ S.phase="night"; S.nightResolved=false; render(); };
+  const rn=document.getElementById("resolve-night");
+  if(rn) rn.onclick=resolveNight;
+  const nd=document.getElementById("next-day");
+  if(nd) nd.onclick=nextDay;
+}
+function nextDay(){
+  if(aliveSurvivors().length===0){ S.ending=computeEnding(true); render(); return; }
+  if(S.baseHealth<=0){ S.ending=computeEnding(false,true); render(); return; }
+  if(S.day>=100){ S.ending=computeEnding(); render(); return; }
+  S.day++; S.phase="morning"; S.nightResolved=false;
+  render();
+}
+
+/* ---------- ENDINGS ---------- */
+function computeEnding(wipedOut, baseDestroyed){
+  const alive = aliveSurvivors().length;
+  const def = defenseScore();
+  const resTotal = Object.values(S.res).reduce((a,b)=>a+b,0);
+  const score = alive*10 + def*4 + resTotal*0.4 + S.baseHealth*0.6;
+  let key, title, text;
+  if(wipedOut){
+    key="alone"; title="No One Left";
+    text="One by one, your camp emptied. On day "+S.day+", you're alone with whatever's left of the walls you built. The apocalypse hasn't even properly begun, and already you're the last name on a list no one will read.";
+  } else if(baseDestroyed){
+    key="overrun"; title="Overrun";
+    text="The base falls before day 100. Whatever defenses you had weren't enough. You escape with what you can carry, one more refugee in a world that has stopped keeping count.";
+  } else if(score>=140){
+    key="fortress"; title="The Fortress";
+    text="When the true collapse arrives on day 100, your walls hold, your generator hums, and your people know exactly where to stand. You didn't just survive the hundred days — you built something the apocalypse can't take. Others will come looking for a place like this. You're ready for them, too.";
+  } else if(alive>=5 && score>=90){
+    key="community"; title="The Community";
+    text="You didn't build the strongest walls, but you built the strongest people. On day 100, your survivors stand shoulder to shoulder. It's not certainty that gets you through what's coming — it's each other. That will have to be enough. It is.";
+  } else if(score>=60){
+    key="balanced"; title="Holding the Line";
+    text="You made it to day 100 patched together, under-resourced, but standing. When the unknown finally arrives, your camp is not ready for everything — but it's ready for something. That, in the end, might be the difference.";
+  } else {
+    key="lone"; title="Barely Standing";
+    text="Day 100 arrives and finds your camp thin and threadbare — low on nearly everything, fewer people than you started with. You survive the day. What comes after is anyone's guess. You've bought yourself exactly one more day to find out.";
+  }
+  return {key,title,text,stats:{day:S.day,alive,def,resTotal:Math.round(resTotal),baseHealth:S.baseHealth}};
+}
+function endingScreen(){
+  const e=S.ending;
+  return `<div class="title-screen">
+    <div class="sub2">DAY ${e.stats.day} OF 100</div>
+    <h1 style="font-size:46px;">${e.title}</h1>
+    <p class="lede">${e.text}</p>
+    <div class="log" style="max-width:46ch;margin-bottom:22px;">
+      <p>Survivors remaining: <b>${e.stats.alive}</b></p>
+      <p>Defense score: <b>${e.stats.def}</b></p>
+      <p>Resources held: <b>${e.stats.resTotal}</b></p>
+      <p>Base health: <b>${e.stats.baseHealth}</b></p>
+    </div>
+    <button class="btn primary" id="restart">Start a New Run</button>
+  </div>`;
+}
+function bindEnding(){ document.getElementById("restart").onclick=()=>{ clearSave(); S=freshState(); render(); }; }
+
+/* ---------- INIT ---------- */
+render();
+</script>
+</body>
+</html>
